@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nenshi's Classes | Making tech simple</title>
+  <style>
+    /* ==========================================================================
+       CSS Custom Properties (Design Tokens)
+       ========================================================================== */
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-subtle: #eff6ff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent-primary: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-secondary: #0ea5e9;
+      --accent-soft: #dbeafe;
+      --border-color: #e2e8f0;
+      --success-bg: #dcfce7;
+      --success-text: #166534;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 22px;
+      --radius-full: 9999px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+      --shadow-lg: 0 20px 35px -10px rgba(37, 99, 235, 0.14);
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ==========================================================================
+       Reset & Base Styles
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    button, input, textarea {
+      font-family: inherit;
+    }
+
+    /* ==========================================================================
+       Layout Utilities
+       ========================================================================== */
+    .container {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+
+    .section {
+      padding: 4.5rem 0;
+      scroll-margin-top: 4.5rem;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto 3rem;
+    }
+
+    .section-badge {
+      display: inline-block;
+      background-color: var(--accent-soft);
+      color: var(--accent-primary);
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.95rem;
+      border-radius: var(--radius-full);
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.02em;
+    }
+
+    .section-title {
+      font-size: clamp(1.75rem, 4vw, 2.4rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       Header & Navigation (Pure CSS Mobile Drawer + Sticky Bar)
+       ========================================================================== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background-color: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 4.5rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--text-primary);
+    }
+
+    .brand-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    }
+
+    /* Pure CSS Checkbox Hack for Mobile Menu */
+    .nav-toggle {
+      display: none;
+    }
+
+    .nav-toggle-label {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 44px;
+      height: 44px;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+
+    .nav-toggle-label:hover {
+      background-color: var(--bg-subtle);
+    }
+
+    .nav-toggle-label span {
+      display: block;
+      width: 100%;
+      height: 2.5px;
+      background-color: var(--text-primary);
+      border-radius: 2px;
+      transition: var(--transition);
+    }
+
+    .nav-menu {
+      position: absolute;
+      top: 4.5rem;
+      left: 0;
+      right: 0;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+      padding: 1rem 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: var(--transition);
+    }
+
+    .nav-toggle:checked ~ .nav-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    /* Animate Hamburger to X */
+    .nav-toggle:checked ~ .nav-toggle-label span:nth-child(1) {
+      transform: translateY(7.5px) rotate(45deg);
+    }
+
+    .nav-toggle:checked ~ .nav-toggle-label span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .nav-toggle:checked ~ .nav-toggle-label span:nth-child(3) {
+      transform: translateY(-7.5px) rotate(-45deg);
+    }
+
+    .nav-link {
+      display: block;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+
+    .nav-link:hover,
+    .nav-link:focus {
+      color: var(--accent-primary);
+      background-color: var(--bg-subtle);
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      background-color: var(--accent-primary);
+      color: #ffffff;
+      font-weight: 600;
+      border-radius: var(--radius-full);
+      transition: var(--transition);
+    }
+
+    .nav-cta:hover {
+      background-color: var(--accent-hover);
+    }
+
+    /* ==========================================================================
+       Home (Hero) Section
+       ========================================================================== */
+    .hero {
+      position: relative;
+      padding: 4rem 0 5rem;
+      background: radial-gradient(circle at top right, #dbeafe 0%, transparent 45%),
+                  radial-gradient(circle at bottom left, #e0f2fe 0%, transparent 45%);
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .hero-content {
+      text-align: center;
+    }
+
+    .tagline-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 0.45rem 1rem;
+      border-radius: var(--radius-full);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.25rem;
+    }
+
+    .tagline-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent-secondary);
+    }
+
+    .hero-title {
+      font-size: clamp(2.15rem, 5.5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-description {
+      font-size: clamp(1.05rem, 2.2vw, 1.2rem);
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto 2rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      justify-content: center;
+      max-width: 380px;
+      margin: 0 auto;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.9rem 1.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: var(--radius-full);
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      min-height: 48px;
+    }
+
+    .btn-primary {
+      background-color: var(--accent-primary);
+      color: #ffffff;
+      box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--bg-subtle);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    /* Hero Visual Card */
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+    }
+
+    .visual-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .visual-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .window-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background-color: #f87171; }
+    .dot-yellow { background-color: #fbbf24; }
+    .dot-green { background-color: #34d399; }
+
+    .visual-title {
+      margin-left: auto;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .learning-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1rem;
+      border-radius: var(--radius-md);
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .step-icon {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background-color: var(--accent-soft);
+      color: var(--accent-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+    }
+
+    .step-info h3 {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .step-info p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       About Section
+       ========================================================================== */
+    .about {
+      background-color: var(--bg-surface);
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2rem 1.75rem;
+      transition: var(--transition);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: #bfdbfe;
+    }
+
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--accent-soft), #e0f2fe);
+      color: var(--accent-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.65rem;
+      color: var(--text-primary);
+    }
+
+    .feature-card p {
+      font-size: 0.98rem;
+      color: var(--text-secondary);
+    }
+
+    .mission-banner {
+      margin-top: 2.5rem;
+      background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+
+    .mission-text h3 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .mission-text p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    .topics-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .topic-tag {
+      background-color: var(--bg-surface);
+      color: var(--accent-primary);
+      border: 1px solid #bfdbfe;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 0.4rem 0.9rem;
+      border-radius: var(--radius-full);
+    }
+
+    /* ==========================================================================
+       Contact Section
+       ========================================================================== */
+    .contact-wrapper {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .contact-info-card {
+      background: linear-gradient(145deg, var(--accent-primary), #1e40af);
+      color: #ffffff;
+      border-radius: var(--radius-lg);
+      padding: 2.25rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 2rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .contact-info-card h3 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+    }
+
+    .contact-info-card p {
+      color: #dbeafe;
+      font-size: 0.98rem;
+    }
+
+    .contact-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .contact-method-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+    }
+
+    .method-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background-color: rgba(255, 255, 255, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .method-details span {
+      display: block;
+      font-size: 0.8rem;
+      color: #bfdbfe;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+    }
+
+    .method-details strong {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .contact-form-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem 1.75rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.45rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      color: var(--text-primary);
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      transition: var(--transition);
+      min-height: 48px;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      background-color: var(--bg-surface);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    textarea.form-control {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .btn-submit {
+      width: 100%;
+    }
+
+    /* CSS-Only Form Confirmation State via :target */
+    .form-feedback {
+      display: none;
+      margin-top: 1.25rem;
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-md);
+      background-color: var(--success-bg);
+      color: var(--success-text);
+      font-weight: 600;
+      font-size: 0.95rem;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    #message-sent:target {
+      display: flex;
+    }
+
+    /* ==========================================================================
+       Footer
+       ========================================================================== */
+    .footer {
+      background-color: var(--bg-surface);
+      border-top: 1px solid var(--border-color);
+      padding: 2.5rem 0;
+      text-align: center;
+    }
+
+    .footer-brand {
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--text-primary);
+      margin-bottom: 0.35rem;
+    }
+
+    .footer-tagline {
+      color: var(--accent-primary);
+      font-weight: 600;
+      font-size: 0.92rem;
+      margin-bottom: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: var(--accent-primary);
+    }
+
+    .footer-copy {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       Responsive Breakpoints (Tablet & Desktop)
+       ========================================================================== */
+    @media (min-width: 640px) {
+      .hero-actions {
+        flex-direction: row;
+        max-width: none;
+      }
+
+      .about-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 768px) {
+      .section {
+        padding: 6rem 0;
+      }
+
+      /* Desktop Navigation */
+      .nav-toggle-label {
+        display: none;
+      }
+
+      .nav-menu {
+        position: static;
+        flex-direction: row;
+        align-items: center;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        gap: 0.5rem;
+      }
+
+      .nav-cta {
+        margin-top: 0;
+        margin-left: 0.75rem;
+        padding: 0.6rem 1.35rem;
+      }
+
+      .contact-wrapper {
+        grid-template-columns: 1fr 1.35fr;
+      }
+    }
+
+    @media (min-width: 960px) {
+      .hero {
+        padding: 5.5rem 0 6.5rem;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1.15fr 0.85fr;
+        text-align: left;
+      }
+
+      .hero-content {
+        text-align: left;
+      }
+
+      .hero-description {
+        margin-left: 0;
+      }
+
+      .hero-actions {
+        justify-content: flex-start;
+      }
+
+      .about-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .mission-banner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .mission-text {
+        max-width: 55%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       Navigation Header
+       ======================================================================== -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="#home" class="brand" aria-label="Nenshi's Classes Home">
+        <span class="brand-icon" aria-hidden="true">
+          <!-- Clean inline SVG Graduation/Code Icon -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+        </span>
+        <span>Nenshi's Classes</span>
+      </a>
+
+      <!-- Mobile Menu Toggle (Pure CSS) -->
+      <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu">
+      <label for="nav-toggle" class="nav-toggle-label" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </label>
+
+      <nav class="nav-menu" aria-label="Primary Navigation">
+        <a href="#home" class="nav-link">Home</a>
+        <a href="#about" class="nav-link">About</a>
+        <a href="#contact" class="nav-link">Contact</a>
+        <a href="#contact" class="nav-cta">Join a Class</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ======================================================================
+         Home Section
+         ====================================================================== -->
+    <section id="home" class="hero">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <div class="tagline-pill">
+            <span class="tagline-dot" aria-hidden="true"></span>
+            <span>Making tech simple</span>
+          </div>
+          <h1 class="hero-title">
+            Learn Technology with <span>Clarity &amp; Confidence.</span>
+          </h1>
+          <p class="hero-description">
+            Welcome to <strong>Nenshi's Classes</strong>—where complex digital skills, coding, and everyday computer concepts are broken down into friendly, step-by-step lessons anyone can master.
+          </p>
+          <div class="hero-actions">
+            <a href="#contact" class="btn btn-primary">
+              <span>Start Learning Today</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+            <a href="#about" class="btn btn-secondary">Explore Our Approach</a>
+          </div>
+        </div>
+
+        <!-- Approachable Educational Visual Card -->
+        <div class="hero-visual">
+          <div class="visual-card">
+            <div class="visual-header">
+              <span class="window-dot dot-red" aria-hidden="true"></span>
+              <span class="window-dot dot-yellow" aria-hidden="true"></span>
+              <span class="window-dot dot-green" aria-hidden="true"></span>
+              <span class="visual-title">How We Teach</span>
+            </div>
+            <div class="learning-steps">
+              <div class="step-item">
+                <div class="step-icon">01</div>
+                <div class="step-info">
+                  <h3>Zero Jargon Explanations</h3>
+                  <p>Plain, everyday language so you never feel lost.</p>
+                </div>
+              </div>
+              <div class="step-item">
+                <div class="step-icon">02</div>
+                <div class="step-info">
+                  <h3>Hands-On Practice</h3>
+                  <p>Learn by building real projects at your own pace.</p>
+                </div>
+              </div>
+              <div class="step-item">
+                <div class="step-icon">03</div>
+                <div class="step-info">
+                  <h3>1-on-1 Friendly Guidance</h3>
+                  <p>Ask any question—no doubt is ever too small.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         About Section
+         ====================================================================== -->
+    <section id="about" class="section about">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-badge">About Nenshi's Classes</span>
+          <h2 class="section-title">Education Built Around You</h2>
+          <p class="section-subtitle">
+            We believe technology shouldn't feel intimidating. Our mission is simple: turn confusion into curiosity and empower every student to succeed.
+          </p>
+        </div>
+
+        <div class="about-grid">
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+            </div>
+            <h3>Beginner-Friendly Lessons</h3>
+            <p>
+              Whether you are opening a code editor for the very first time or brushing up on digital essentials, every lesson starts from the ground up.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <h3>Flexible &amp; Patient Pacing</h3>
+            <p>
+              Everyone learns differently. We adapt our teaching speed to match your comfort level, ensuring you truly understand each concept before moving on.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
+            <h3>Practical Real-World Skills</h3>
+            <p>
+              Focus on skills that matter today—from building clean websites and understanding logic to using modern productivity tools with ease.
+            </p>
+          </article>
+        </div>
+
+        <!-- Topics Covered Banner -->
+        <div class="mission-banner">
+          <div class="mission-text">
+            <h3>What You Can Learn</h3>
+            <p>
+              Structured, easy-to-follow modules tailored for school students, college learners, and curious adults.
+            </p>
+          </div>
+          <div class="topics-list">
+            <span class="topic-tag">Computer Basics</span>
+            <span class="topic-tag">HTML &amp; CSS Web Design</span>
+            <span class="topic-tag">Programming Fundamentals</span>
+            <span class="topic-tag">Digital Productivity</span>
+            <span class="topic-tag">Problem Solving</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         Contact Section
+         ====================================================================== -->
+    <section id="contact" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-badge">Contact Us</span>
+          <h2 class="section-title">Ready to Make Tech Simple?</h2>
+          <p class="section-subtitle">
+            Have a question about classes, schedules, or topics? Send a message below and we will get back to you soon.
+          </p>
+        </div>
+
+        <div class="contact-wrapper">
+          <!-- Contact Information Card -->
+          <div class="contact-info-card">
+            <div>
+              <h3>Get in Touch</h3>
+              <p>
+                Reach out to book a free introductory session or ask anything about how Nenshi's Classes can help you learn.
+              </p>
+            </div>
+
+            <div class="contact-methods">
+              <div class="contact-method-item">
+                <div class="method-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                </div>
+                <div class="method-details">
+                  <span>Email Us</span>
+                  <strong>hello@nenshisclasses.com</strong>
+                </div>
+              </div>
+
+              <div class="contact-method-item">
+                <div class="method-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                </div>
+                <div class="method-details">
+                  <span>Phone / WhatsApp</span>
+                  <strong>+91 98765 43210</strong>
+                </div>
+              </div>
+
+              <div class="contact-method-item">
+                <div class="method-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </div>
+                <div class="method-details">
+                  <span>Mode of Learning</span>
+                  <strong>Online Live &amp; Home Batches</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Form Card -->
+          <div class="contact-form-card">
+            <form action="#message-sent" method="get">
+              <div class="form-group">
+                <label for="student-name" class="form-label">Your Name</label>
+                <input type="text" id="student-name" name="name" class="form-control" placeholder="e.g., Aarav Sharma" required>
+              </div>
+
+              <div class="form-group">
+                <label for="student-email" class="form-label">Email Address</label>
+                <input type="email" id="student-email" name="email" class="form-control" placeholder="e.g., aarav@example.com" required>
+              </div>
+
+              <div class="form-group">
+                <label for="student-message" class="form-label">What would you like to learn?</label>
+                <textarea id="student-message" name="message" class="form-control" placeholder="Tell us your goals or ask any question..." required></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-submit">
+                <span>Send Message</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+
+              <!-- Pure CSS Confirmation Banner -->
+              <div id="message-sent" class="form-feedback" role="status">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Thank you! Your inquiry has been received. Nenshi's Classes will reach out shortly.</span>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       Footer
+       ======================================================================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-brand">Nenshi's Classes</div>
+      <div class="footer-tagline">Making tech simple</div>
+      <div class="footer-links">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <p class="footer-copy">&copy; 2026 Nenshi's Classes. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
